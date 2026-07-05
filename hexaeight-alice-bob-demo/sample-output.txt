@@ -1,0 +1,40 @@
+=====================================================================
+ HexaEight 2-party ciphers over the same channel secret (Alice -> Bob)
+ Dead drop: no handshake, recipient need not be online.
+   .FM1 = AES-256-GCM       (FIPS 197 / SP 800-38D)   [default]
+   .CM1 = ChaCha20-Poly1305 (RFC 8439)
+   .SM1 = AES-256-GCM-SIV   (RFC 8452, nonce-misuse-resistant)
+   .EM1 = SHAKE-256 keystream + Encrypt-then-MAC       (peelable multi-hop)
+=====================================================================
+
+--- FM1 (AES-256-GCM, FIPS) ---
+  wire: 306 bytes (64-byte message) ; j2b+M9VuRE3CY/uKFcy3na0IHpZn7M4mNyhp84xb7xJypN/n...
+  decrypt: Hello Bob! Alice here - one channel secret, four cipher options.
+  [PASS] round-trip
+  [PASS] same plaintext -> different ciphertext (fresh nonce)
+  [PASS] tamper rejected
+
+--- CM1 (ChaCha20-Poly1305) ---
+  wire: 296 bytes (64-byte message) ; wwwGV/yV12EUvBrPcFwDSRD44j656DRETWXqTmNaeNXadw4j...
+  decrypt: Hello Bob! Alice here - one channel secret, four cipher options.
+  [PASS] round-trip
+  [PASS] same plaintext -> different ciphertext (fresh nonce)
+  [PASS] tamper rejected
+
+--- SM1 (AES-256-GCM-SIV, misuse-resistant) ---
+  wire: 296 bytes (64-byte message) ; VHNNXxrpSeB8gKdZxqRhdebxl1UAoZOhgLFS4+81t2dLjW35...
+  decrypt: Hello Bob! Alice here - one channel secret, four cipher options.
+  [PASS] round-trip
+  [PASS] same plaintext -> different ciphertext (fresh nonce)
+  [PASS] tamper rejected
+
+--- EM1 (SHAKE-256 keystream + Encrypt-then-MAC) ---
+  wire: 316 bytes (64-byte message) ; RVojHQsl+ICmvuLCD2zEGDfUWrfg6A+I5dt/a63TTWQC1ID8...
+  decrypt: Hello Bob! Alice here - one channel secret, four cipher options.
+  [PASS] round-trip
+  [PASS] same plaintext -> different ciphertext (fresh nonce)
+  [PASS] tamper rejected
+
+=====================================================================
+ Demo complete: same CS, four ciphers, all round-trip + tamper-reject.
+=====================================================================
