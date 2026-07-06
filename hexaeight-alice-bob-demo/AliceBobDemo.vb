@@ -32,9 +32,9 @@ Imports Org.BouncyCastle.Crypto.Digests
 '     - platform-brokered pairing material carried in the shared key
 '         (tk0_new/tk0_rem/tk1_new/tk1_rem/sky)
 '   ChannelSecretBytes() computes CS: the encrypt-form (pkpf/tk*_new) and the decrypt-form
-'   (pkpd/tk*_rem) yield the IDENTICAL value by construction. The platform brokers the pairing
-'   but cannot compute CS itself (it lacks the client-only TokenSecret) - a property verifiable
-'   directly from this client code.
+'   (pkpd/tk*_rem) yield the IDENTICAL value by construction. Computing CS also needs the
+'   client-only TokenSecret; whether the platform, as issuer of the pairing material, can itself
+'   compute CS is a property of the (out-of-scope) derivation, not established by this client.
 '
 ' PER-MESSAGE FLOW
 '   1. Derive CS from (this party's password) + (the peer's shared key); serialize it canonically
@@ -108,8 +108,8 @@ Imports Org.BouncyCastle.Crypto.Digests
 ' SIGNING (FORTHCOMING - per-identity post-quantum signatures, no PKI)
 '   Each identity holds ONE PQ signing keypair (e.g. ML-DSA or SPHINCS+, SHAKE variant). The
 '   PRIVATE seed is client-generated and stored as public-safe ciphertext Enc(seed, K), where K
-'   is an epoch-stable CS-derived key the platform cannot recover - so any device of the identity
-'   reconstructs the same signing key (password-change / multi-device safe). The PUBLIC key is
+'   is an epoch-stable CS-derived key held on the identity's own devices - so any device of the
+'   identity reconstructs the same signing key (password-change / multi-device safe). The PUBLIC key is
 '   published to a name registry and resolves from the IDENTITY NAME (no certificates, no CA
 '   chain, no key passing): a verifier looks up "agent-name" -> public key and checks the
 '   signature OFFLINE. This gives attributable, offline "who signed this" for agent
@@ -130,14 +130,15 @@ Imports Org.BouncyCastle.Crypto.Digests
 '     platform verifies. Those keys stay on the device and are re-derived locally each session,
 '     so a token cannot be replayed without them. Only after this proof does the platform
 '     broker the per-peer SHARED KEYS (the tk*/sky fields below).
-'   - BLIND BROKER - THE PLATFORM IS NOT IN THE DATA PATH. This is the core property, and it is
+'   - SEMI-TRUSTED BROKER - NOT IN THE DATA PATH. This is the core property, and it is
 '     evident by reading the client: message encryption and decryption happen entirely on the
 '     client from the locally-derived channel secret; the encrypt/decrypt functions make NO call
 '     to the platform and never hand it plaintext or the decryption operation. The platform is
 '     contacted only at setup to obtain the per-peer key material, never during message exchange.
 '   - What THIS client also proves on its own: CS requires the on-device TokenSecret (derived from
-'     the password, never transmitted), so the NETWORK and OTHER IDENTITIES cannot compute CS or
-'     read content. The enrollment / key-brokering internals are a proprietary boundary and are out
+'     the password, never transmitted), so the transport never transmits CS and does not leak it
+'     through ciphertexts; whether the network or another identity can COMPUTE CS is governed by
+'     the out-of-scope derivation. The enrollment / key-brokering internals are a proprietary boundary and are out
 '     of scope for this artifact; only the client-side properties above are in scope here.
 '   - In this standalone demo the password and shared keys are HARDCODED constants so it runs
 '     offline; in production they come from the out-of-band-verified enrollment + LoginToken +
